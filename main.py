@@ -11,7 +11,8 @@ from colorama import Style, Fore
 # ---- CUSTOMIZE VALUES BELOW ----
 
 curYear="2025" # modify for current year
-featuredEvent="Toms River" # modify to highlight an event in output
+featuredEvent="Randolph" # modify to highlight an event in output
+curDivision="Novice 75"
 
 ids={ # add names and IDs here... the name field is disregarded and is useful only for the coder
   "Desmond Tomaino":"450ada6f-8fd9-4c6b-9e06-85cd36427893"
@@ -21,7 +22,7 @@ ids={ # add names and IDs here... the name field is disregarded and is useful on
   ,"Lucas Harris":"c4516d34-3bc9-4d9a-beaf-9d6bb85d54c0"
   ,"Jonathan Moscato":"caa2024e-7d9c-4412-863c-2dc3271c6fe8"
   ,"Declan Sharkey":"7d06e349-b87a-449d-b9a5-011aa1768ebc"
-  ,"Keir Devlin":"817a94c6-762c-4845-8327-7635701a53ae"
+  #,"Keir Devlin":"817a94c6-762c-4845-8327-7635701a53ae"
   ,"Joseph Bibro":"67f8c116-c50a-4b12-bfc9-481039e7812c"
   ,"Noah Hein":"bb230315-58c1-439a-8df5-29aa3d952ade"
   ,"Anthony D Libecci":"69cccc0b-1dd8-4f7b-8eb2-7f29d8d524e9"
@@ -46,10 +47,10 @@ ids={ # add names and IDs here... the name field is disregarded and is useful on
   ,"AJ Guercio":"05624784-dab1-4dc3-8c1b-5018844a9a92"
   ,"Mason Sawyer":"fd2a6b74-9c02-482a-a5ab-27d2c6523ad0"
   ,"Jayce Bird":"9bf9f041-83de-4ad7-b835-582e60599073"
-  ,"Leonidas Dunbar":"61a6e728-3790-4191-ac64-be37e9c4d352"
+  #,"Leonidas Dunbar":"61a6e728-3790-4191-ac64-be37e9c4d352"
   ,"Daniel Dugan":"c09c010a-8ed0-4a0a-ac63-f8a2047c3dc3"
-  #,"":""
-  #,"":""
+  #,"Lucas Thompson":"03325efb-8f2a-4244-96e2-51c168073773"
+  #,"Gennarro Melia":"1d56d01e-8822-47b1-867d-7ef4c5d7bfe9"
   #,"":""
   #,"":""
 }
@@ -82,7 +83,7 @@ for id in ids.values():
   li_tags=soup.find_all("li")
   in_qual=False
   for li_tag in li_tags:
-    if curYear in li_tag.text  and "USAW-NJ Qualifier" in li_tag.text and "Novice 75" in li_tag.text:
+    if curYear in li_tag.text  and "USAW-NJ Qualifier" in li_tag.text and curDivision in li_tag.text:
       in_qual=True
       print('\n',Style.BRIGHT,Fore.CYAN)
       print(name,Style.NORMAL,Fore.WHITE)
@@ -91,11 +92,13 @@ for id in ids.values():
 
   if in_qual:
     for li_tag in li_tags:
-      if curYear in li_tag.text  and "USAW-NJ Qualifier" in li_tag.text and "Novice 75" in li_tag.text:
+      if curYear in li_tag.text  and "USAW-NJ Qualifier" in li_tag.text and curDivision in li_tag.text:
         if is_date_in_past(li_tag.text.strip()):
           print(Fore.LIGHTBLACK_EX,end='')
-        else:
+        elif featuredEvent in li_tag.text:
           print(Fore.LIGHTYELLOW_EX,end='')
+        else:
+          print(Fore.LIGHTMAGENTA_EX,end='')
         print(li_tag.text.strip(),Fore.WHITE)
   
     for li_tag in li_tags:
