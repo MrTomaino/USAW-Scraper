@@ -10,8 +10,8 @@ from colorama import Style, Fore
 
 # ---- CUSTOMIZE VALUES BELOW ----
 
-curYear="2024" # modify for current year
-featuredEvent="North Hunterdon" # modify to highlight an event in output
+curYear="2025" # modify for current year
+featuredEvent="Toms River" # modify to highlight an event in output
 
 ids={ # add names and IDs here... the name field is disregarded and is useful only for the coder
   "Desmond Tomaino":"450ada6f-8fd9-4c6b-9e06-85cd36427893"
@@ -82,7 +82,7 @@ for id in ids.values():
   li_tags=soup.find_all("li")
   in_qual=False
   for li_tag in li_tags:
-    if curYear in li_tag.text  and "USAW-NJ Qualifier" in li_tag.text and "Novice 70" in li_tag.text:
+    if curYear in li_tag.text  and "USAW-NJ Qualifier" in li_tag.text and "Novice 75" in li_tag.text:
       in_qual=True
       print('\n',Style.BRIGHT,Fore.CYAN)
       print(name,Style.NORMAL,Fore.WHITE)
@@ -91,7 +91,7 @@ for id in ids.values():
 
   if in_qual:
     for li_tag in li_tags:
-      if curYear in li_tag.text  and "USAW-NJ Qualifier" in li_tag.text and "Novice 70" in li_tag.text:
+      if curYear in li_tag.text  and "USAW-NJ Qualifier" in li_tag.text and "Novice 75" in li_tag.text:
         if is_date_in_past(li_tag.text.strip()):
           print(Fore.LIGHTBLACK_EX,end='')
         else:
