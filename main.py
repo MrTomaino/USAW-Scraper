@@ -1,19 +1,19 @@
-#USAW Scraper
-#Copyright 2024 B. Michael Tomaino
-#This program scrapes arena.flowrestling.org for wrestlers' registrations and placementsin USAW qualifiers this year
+# USAW Scraper
+# Copyright 2024 B. Michael Tomaino
+# This program scrapes arena.flowrestling.org for wrestlers' registrations and placements in USAW qualifiers this year
 
 from datetime import datetime
 from bs4 import BeautifulSoup
-import re
 from urllib.request import urlopen
 from colorama import Style, Fore
 
 # ---- CUSTOMIZE VALUES BELOW ----
 
-curYear="2025" # modify for current year
-featuredEvent="Randolph" # modify to highlight an event in output
-curDivision="Novice 75"
+curYear = "2025"  # Modify for current year
+featuredEvent = "Randolph"  # Modify to highlight an event in output
+curDivision = "Novice 75"
 
+# IDs for wrestlers
 ids={ # add names and IDs here... the name field is disregarded and is useful only for the coder
   "Desmond Tomaino":"450ada6f-8fd9-4c6b-9e06-85cd36427893"
   ,"Braden Smigler":"e89a71a6-ac86-429e-b6c5-094449b64523"
@@ -65,61 +65,99 @@ ids={ # add names and IDs here... the name field is disregarded and is useful on
   #,"":""
 }
 
-# ---- END CUSTOMIZATION SECTION ----
+
+# Generate filename based on current date and time
+current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+output_filename = f"featured_event_records_{current_time}.txt"
+
+# Create and initialize the output file
+with open(output_filename, "w") as file:
+    file.write(f"Featured Event Records - {featuredEvent}\n")
+    file.write("=" * 50 + "\n\n")
+
 
 def is_date_in_past(date_string):
-  # isolate first three tokens in date string
-  date_clean = ' '.join(date_string.split(' ')[0:3])
-  
-  date_object = datetime.strptime(date_clean, "%b %d, %Y")
-  # Get the current date and time
-  current_date = datetime.now()
-
-  # Compare the dates
-  return date_object < current_date
+    """Check if the date in the string is in the past."""
+    date_clean = " ".join(date_string.split(" ")[0:3])
+    date_object = datetime.strptime(date_clean, "%b %d, %Y")
+    current_date = datetime.now()
+    return date_object < current_date
 
 
-searchedWrestlers=[];
-for id in ids.values():
-  url = "https://www.flowrestling.org/athletes/"+id+"/placements"
-  page = urlopen(url)
-  html_bytes = page.read()
-  html = html_bytes.decode("utf-8")
-  
-  soup=BeautifulSoup(html,'html.parser')
-  name=soup.find('div', attrs={'data-test':'athlete-header-title'}).get_text()
-  searchedWrestlers.append(name)
-  
-  li_tags=soup.find_all("li")
-  in_qual=False
-  for li_tag in li_tags:
-    if curYear in li_tag.text  and "USAW-NJ Qualifier" in li_tag.text and curDivision in li_tag.text:
-      in_qual=True
-      print('\n',Style.BRIGHT,Fore.CYAN)
-      print(name,Style.NORMAL,Fore.WHITE)
-      searchedWrestlers.remove(name)
-      break
+def output_record(file, name, events, last_year_performance, to_console=False):
+    """Output the wrestler's record to both the console and the file."""
+    header = f"Wrestler: {name}\n"
+    separator = "=" * 50
 
-  if in_qual:
-    for li_tag in li_tags:
-      if curYear in li_tag.text  and "USAW-NJ Qualifier" in li_tag.text and curDivision in li_tag.text:
-        if is_date_in_past(li_tag.text.strip()):
-          print(Fore.LIGHTBLACK_EX,end='')
-        elif featuredEvent in li_tag.text:
-          print(Fore.LIGHTYELLOW_EX,end='')
+    if to_console:
+        print("\n", Style.BRIGHT, Fore.CYAN, header.strip(), Style.NORMAL, Fore.WHITE, sep="")
+    else:
+        file.write(header)
+
+    for event in events:
+        if featuredEvent in event:
+            line = f"  Featured Event: {event}\n"
+            if to_console:
+                print(Fore.LIGHTYELLOW_EX, line.strip(), Fore.WHITE, sep="")
+            else:
+                file.write(line)
         else:
-          print(Fore.LIGHTMAGENTA_EX,end='')
-        print(li_tag.text.strip(),Fore.WHITE)
-  
+            line = f"  Other Event: {event}\n"
+            if to_console:
+                print(Fore.LIGHTMAGENTA_EX, line.strip(), Fore.WHITE, sep="")
+            else:
+                file.write(line)
+
+    if last_year_performance:
+        line = f"  Last Year's Performance: {last_year_performance}\n"
+        if to_console:
+            print(Fore.LIGHTBLACK_EX, line.strip(), Fore.WHITE, sep="")
+        else:
+            file.write(line)
+
+    if not to_console:
+        file.write("\n")
+
+
+searchedWrestlers = []
+for wrestler_name, wrestler_id in ids.items():
+    url = f"https://www.flowrestling.org/athletes/{wrestler_id}/placements"
+    page = urlopen(url)
+    html_bytes = page.read()
+    html = html_bytes.decode("utf-8")
+
+    soup = BeautifulSoup(html, "html.parser")
+    name = soup.find("div", attrs={"data-test": "athlete-header-title"}).get_text()
+    searchedWrestlers.append(name)
+
+    li_tags = soup.find_all("li")
+    events = []  # To store all relevant event appearances
+    in_featured_event = False
+    last_year_performance = None
+
     for li_tag in li_tags:
-      if "USAW-NJ Kids Scholastic State Championships" in li_tag.text:
-        print(Fore.LIGHTBLACK_EX,end='')
-        print("Previous year:",li_tag.text.strip(),Fore.WHITE)
+        event_text = li_tag.text.strip()
 
-print(Fore.LIGHTBLACK_EX,"\nTracked wrestlers not listed:",Fore.WHITE);
-for oneName in searchedWrestlers[:-1]:
-    print(oneName, end=", ")
-print(searchedWrestlers[-1])
+        # Check for current year and division events
+        if curYear in event_text and "USAW-NJ Qualifier" in event_text and curDivision in event_text:
+            events.append(event_text)
+            if featuredEvent in event_text:
+                in_featured_event = True
 
-print(Fore.LIGHTBLACK_EX,end='')
+        # Check for last year's performance at championships
+        if "USAW-NJ Kids Scholastic State Championships" in event_text:
+            last_year_performance = event_text
+
+    # Output both to the console and the file
+    if in_featured_event:
+        with open(output_filename, "a") as file:
+            output_record(file, name, events, last_year_performance, to_console=False)
+        output_record(None, name, events, last_year_performance, to_console=True)
+
+#print(Fore.LIGHTBLACK_EX, "\nTracked wrestlers not listed:", Fore.WHITE)
+#for oneName in searchedWrestlers[:-1]:
+#    print(oneName, end=", ")
+#print(searchedWrestlers[-1])
+
+print(Fore.LIGHTBLACK_EX, end="")
 print("\nOperation complete...")
